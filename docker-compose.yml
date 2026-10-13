@@ -1,0 +1,24 @@
+services:
+  broker:
+    image: eclipse-mosquitto:2.0
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+
+  sensor:
+    build: .
+    command: ["python", "-m", "sensor_sim.modbus_server"]
+    ports:
+      - "5020:5020"
+
+  gateway:
+    build: .
+    command: ["python", "-m", "gateway.gateway"]
+    environment:
+      MODBUS_HOST: sensor
+      MQTT_HOST: broker
+    depends_on:
+      - broker
+      - sensor
+    restart: unless-stopped
